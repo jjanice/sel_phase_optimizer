@@ -26,7 +26,10 @@ class SELCavity(Cavity):
         super().__init__(cavity_num=cavity_num, rack_object=rack_object)
         self._q_waveform_pv: Optional[PV] = None
         self._i_waveform_pv: Optional[PV] = None
-        self._sel_poff_pv: Optional[PV] = None
+        self._sel_poff_pv_obj: Optional[PV] = None
+        self._fit_chisquare_pv_obj: Optional[PV] = None
+        self._fit_slope_pv_obj: Optional[PV] = None
+        self._fit_intercept_pv_obj: Optional[PV] = None
 
         self.logger = custom_logger(f"{self} SEL Phase Opt Logger")
         self.logfile = (
@@ -39,10 +42,10 @@ class SELCavity(Cavity):
         self.logger.addHandler(self.file_handler)
 
     @property
-    def sel_poff_pv(self) -> PV:
-        if not self._sel_poff_pv:
-            self._sel_poff_pv = PV(self.pv_addr("SEL_POFF"))
-        return self._sel_poff_pv
+    def sel_poff_pv_obj(self) -> PV:
+        if not self._sel_poff_pv_obj:
+            self._sel_poff_pv_obj = PV(self.pv_addr("SEL_POFF"))
+        return self._sel_poff_pv_obj
 
     @property
     def sel_phase_offset(self):
@@ -61,28 +64,28 @@ class SELCavity(Cavity):
         return self._q_waveform_pv.get()
 
     @property
-    def fit_chisquare(self) -> PV:
-        if not self._fit_chisquare:
-            self._fit_chisquare = PV(self.pv_addr("CTRL:FIT_CHISQUARE"))
-        return self._fit_chisquare
+    def fit_chisquare_pv_obj(self) -> PV:
+        if not self._fit_chisquare_pv_obj:
+            self._fit_chisquare_pv_obj = PV(self.pv_addr("CTRL:FIT_CHISQUARE"))
+        return self._fit_chisquare_pv_obj
 
     @property
-    def fit_slope(self) -> PV:
-        if not self._fit_slope:
-            self._fit_slope = PV(self.pv_addr("CTRL:FIT_SLOPE"))
-        return self._fit_slope
+    def fit_slope_pv_obj(self) -> PV:
+        if not self._fit_slope_pv_obj:
+            self._fit_slope_pv_obj = PV(self.pv_addr("CTRL:FIT_SLOPE"))
+        return self._fit_slope_pv_obj
 
     @property
-    def fit_intercept(self) -> PV:
-        if not self._fit_intercept:
+    def fit_intercept_pv_obj(self) -> PV:
+        if not self._fit_intercept_pv_obj:
             self._fit_intercept = PV(self.pv_addr("CTRL:FIT_INTERCEPT"))
-        return self._fit_intercept
+        return self._fit_intercept_pv_obj
 
     def straighten_cheeto(self) -> bool:
         """
         :return: True if wanted to take a step larger than MAX_STEP
         """
-
+sel_phase_opt
         if not self.is_online or self.aact <= 1:
             return False
 
@@ -121,10 +124,10 @@ class SELCavity(Cavity):
                 f"{prefix}{current_time}{self}{suffix}  step: {step:5.2f} chi^2: {chisum:.2g}"
             )
 
-            self.sel_poff_pv.put(startVal + step)
-            self.fit_chisquare.put(chisum)
-            self.fit_slope.put(slop)
-            self.fit_intercept.put(inter)
+            self.sel_poff_pv_obj.put(startVal + step)
+            self.fit_chisquare_pv_obj.put(chisum)
+            self.fit_slope_pv_obj.put(slop)
+            self.fit_intercept_pv_obj.put(inter)
 
             return large_step
 
