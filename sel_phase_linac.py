@@ -60,6 +60,24 @@ class SELCavity(Cavity):
             self._q_waveform_pv = PV(self.pv_addr("CTRL:QWF"))
         return self._q_waveform_pv.get()
 
+    @property
+    def fit_chisquare(self) -> PV:
+        if not self._fit_chisquare:
+            self._fit_chisquare = PV(self.pv_addr("CTRL:FIT_CHISQUARE"))
+        return self._fit_chisquare
+
+    @property
+    def fit_slope(self) -> PV:
+        if not self._fit_slope:
+            self._fit_slope = PV(self.pv_addr("CTRL:FIT_SLOPE"))
+        return self._fit_slope
+
+    @property
+    def fit_intercept(self) -> PV:
+        if not self._fit_intercept:
+            self._fit_intercept = PV(self.pv_addr("CTRL:FIT_INTERCEPT"))
+        return self._fit_intercept
+
     def straighten_cheeto(self) -> bool:
         """
         :return: True if wanted to take a step larger than MAX_STEP
@@ -77,7 +95,7 @@ class SELCavity(Cavity):
 
         if not np.isnan(slop):
             chisum = 0
-            for nn, yy in enumerate(iwf):
+            for nn, yy in enumerate(qwf):
                 chisum += (yy - (slop * iwf[nn] + inter)) ** 2 / (
                     slop * iwf[nn] + inter
                 )
@@ -104,6 +122,10 @@ class SELCavity(Cavity):
             )
 
             self.sel_poff_pv.put(startVal + step)
+            self.fit_chisquare.put(chisum)
+            self.fit_slope.put(slop)
+            self.fit_intercept.put(inter)
+
             return large_step
 
         else:
