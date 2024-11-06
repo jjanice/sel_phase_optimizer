@@ -78,14 +78,14 @@ class SELCavity(Cavity):
     @property
     def fit_intercept_pv_obj(self) -> PV:
         if not self._fit_intercept_pv_obj:
-            self._fit_intercept = PV(self.pv_addr("CTRL:FIT_INTERCEPT"))
+            self._fit_intercept_pv_obj = PV(self.pv_addr("CTRL:FIT_INTERCEPT"))
         return self._fit_intercept_pv_obj
 
     def straighten_cheeto(self) -> bool:
         """
         :return: True if wanted to take a step larger than MAX_STEP
         """
-sel_phase_opt
+
         if not self.is_online or self.aact <= 1:
             return False
 
@@ -94,13 +94,16 @@ sel_phase_opt
         qwf = self.q_waveform
         large_step = False
 
+        """
+        siegelslopes is called with y then (optional) x
+        """
         [slop, inter] = stats.siegelslopes(iwf, qwf)
 
         if not np.isnan(slop):
             chisum = 0
-            for nn, yy in enumerate(qwf):
-                chisum += (yy - (slop * iwf[nn] + inter)) ** 2 / (
-                    slop * iwf[nn] + inter
+            for nn, yy in enumerate(iwf):
+                chisum += (yy - (slop * qwf[nn] + inter)) ** 2 / (
+                    slop * qwf[nn] + inter
                 )
 
             step = slop * MULT
